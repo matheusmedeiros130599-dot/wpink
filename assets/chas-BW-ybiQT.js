@@ -1,1 +1,0 @@
-import{u as e}from"./cart-Dyu7W_a9.js";import{t}from"./SiteLayout-DO6nTVe9.js";import{i as n}from"./index-By-WyLQq.js";import{t as r}from"./CategoryPage-Crwd_2uK.js";var i=e(),a=()=>(0,i.jsx)(t,{children:(0,i.jsx)(r,{title:n.title,subtitle:n.subtitle,items:n.items,crumb:`Chás`})});export{a as component};

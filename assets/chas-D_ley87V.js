@@ -1,0 +1,1 @@
+import{S as e}from"./products-ByfLm_qN.js";import{t}from"./SiteLayout-BSLly7pT.js";import{i as n}from"./index-DZD39OpA.js";import{t as r}from"./CategoryPage-DN1Hxkmw.js";var i=e(),a=()=>(0,i.jsx)(t,{children:(0,i.jsx)(r,{title:n.title,subtitle:n.subtitle,items:n.items,crumb:`Chás`})});export{a as component};

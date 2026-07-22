@@ -1,0 +1,7 @@
+# Protege o arquivo de dados do painel, mas mantém o index.php acessível.
+# Compatível com Apache 2.2 e 2.4
+
+<Files "data.json">
+    Order deny,allow
+    Deny from all
+</Files>

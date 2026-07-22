@@ -1,0 +1,5 @@
+# Bloqueia acesso direto a qualquer arquivo .json via browser
+# Compatível com Apache 2.2 e 2.4
+
+Order deny,allow
+Deny from all

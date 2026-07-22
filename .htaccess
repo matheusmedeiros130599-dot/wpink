@@ -1,0 +1,14 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # 1. Rewrite API paths without extensions directly to root PHP scripts (Bypassing Mod_Security folder block)
+  RewriteRule ^api/create-pix$ create-pix.php [L,QSA]
+  RewriteRule ^api/check-status$ check-status.php [L,QSA]
+  RewriteRule ^api/pix-proof-upload.php$ pix-proof-upload.php [L,QSA]
+
+  # 2. Redirect all other non-file/non-directory requests to index.html for React SPA
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . index.html [L]
+</IfModule>
