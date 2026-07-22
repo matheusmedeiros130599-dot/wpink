@@ -1,0 +1,17 @@
+{
+    "codigo": "QN749955838BR",
+    "posted_at": 1721360700,
+    "destinatario": "Cliente WPINK",
+    "email": "wepinksuplementos@gmail.com",
+    "produto": "Kit Presencial Premium",
+    "prazo_min": 5,
+    "prazo_max": 7,
+    "cidade_destino": "São Paulo",
+    "estado_destino": "SP",
+    "cep_destino": "01310-100",
+    "rua": "Avenida Paulista",
+    "numero": "1000",
+    "bairro": "Bela Vista",
+    "amount": 0.0,
+    "ultimo_status_email": "preparacao"
+}

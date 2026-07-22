@@ -1,0 +1,13 @@
+{
+  "name": "wpink-landing-page-clone",
+  "version": "1.0.0",
+  "description": "Clone da landing page da Wpink com integracao de checkout ZuckPay",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {},
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
