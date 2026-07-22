@@ -149,7 +149,7 @@ const server = http.createServer((req, res) => {
   console.log(`[${new Date().toLocaleTimeString()}] ${req.method} ${pathname}`);
   
   // 1. API: CREATE PIX
-  if (pathname === '/api/create-pix' && req.method === 'POST') {
+  if ((pathname === '/api/create-pix' || pathname === '/create-pix.php') && req.method === 'POST') {
     const bodyChunks = [];
     req.on('data', chunk => bodyChunks.push(chunk));
     req.on('end', async () => {
@@ -225,7 +225,7 @@ const server = http.createServer((req, res) => {
   }
   
   // 2. API: CHECK STATUS
-  if (pathname === '/api/check-status' && req.method === 'GET') {
+  if ((pathname === '/api/check-status' || pathname === '/check-status.php') && req.method === 'GET') {
     const transactionId = parsedUrl.searchParams.get('id') || '';
     if (!transactionId) {
       res.writeHead(400, { 'Content-Type': 'application/json' });
@@ -270,7 +270,7 @@ const server = http.createServer((req, res) => {
   }
   
   // 3. API: PROOF UPLOAD (MOCK)
-  if (pathname === '/api/pix-proof-upload.php' && req.method === 'POST') {
+  if ((pathname === '/api/pix-proof-upload.php' || pathname === '/pix-proof-upload.php') && req.method === 'POST') {
     // Simply mock success upload response
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ ok: true, message: 'Comprovante enviado com sucesso!' }));

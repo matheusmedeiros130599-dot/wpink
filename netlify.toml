@@ -1,6 +1,16 @@
 [[redirects]]
-  from = "/api/*"
-  to = "https://wpink-suplementos.up.railway.app/api/:splat"
+  from = "/create-pix.php"
+  to = "https://wpink-suplementos.up.railway.app/create-pix.php"
+  status = 200
+
+[[redirects]]
+  from = "/check-status.php"
+  to = "https://wpink-suplementos.up.railway.app/check-status.php"
+  status = 200
+
+[[redirects]]
+  from = "/pix-proof-upload.php"
+  to = "https://wpink-suplementos.up.railway.app/pix-proof-upload.php"
   status = 200
 
 [[redirects]]
