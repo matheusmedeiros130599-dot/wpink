@@ -1,0 +1,31 @@
+{
+  "framework": null,
+  "functions": {
+    "api/*.php": {
+      "runtime": "vercel-php@0.7.3"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "query",
+          "key": "loja"
+        }
+      ],
+      "destination": "/index.html"
+    },
+    {
+      "source": "/",
+      "destination": "/presell.html"
+    },
+    { "source": "/presell", "destination": "/presell.html" },
+    { "source": "/ofertas", "destination": "/presell.html" },
+    { "source": "/oferta", "destination": "/presell.html" },
+    { "source": "/checkout", "destination": "/checkout.html" },
+    { "source": "/safe", "destination": "/safe/index.html" },
+    { "source": "/safe/", "destination": "/safe/index.html" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

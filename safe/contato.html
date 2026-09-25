@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Central de Contato & Atendimento | VitaFemme Portal</title>
+  <meta name="description" content="Entre em contato com a equipe editorial e nutricional do portal VitaFemme para dúvidas, sugestões e esclarecimentos." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌿</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/safe/styles.css" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container nav-container">
+      <a href="/safe/index.html" class="brand-logo">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+        VitaFemme
+      </a>
+      <nav class="main-nav">
+        <a href="/safe/index.html">Início</a>
+        <a href="/safe/sobre.html">Quem Somos</a>
+        <a href="/safe/blog.html">Artigos & Guias</a>
+        <a href="/safe/faq.html">Dúvidas Frequentes</a>
+        <a href="/safe/contato.html" class="active">Contato</a>
+        <a href="/safe/contato.html" class="nav-btn">Fale com Especialista</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero" style="padding: 60px 0 40px;">
+    <div class="container">
+      <span class="badge">Atendimento ao Leitor</span>
+      <h1>Fale com Nossa Equipe</h1>
+      <p>Dúvidas sobre matérias, sugestões de pautas ou questões sobre nossos critérios editoriais? Envie sua mensagem.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container" style="max-width: 960px;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 48px;">
+        <div>
+          <h2 style="font-family: 'Playfair Display', serif; font-size: 26px; color: #0f172a; margin-bottom: 16px;">Canais Institucionais</h2>
+          <p style="color: #64748b; font-size: 15px; margin-bottom: 28px;">Estamos à disposição para atender profissionais de saúde, pesquisadores e leitoras de todo o país.</p>
+
+          <div style="margin-bottom: 24px;">
+            <strong style="display: block; color: #0f766e; font-size: 14px; text-transform: uppercase; margin-bottom: 4px;">E-mail Geral</strong>
+            <p style="font-size: 16px; color: #0f172a;">contato@vitafemme.org.br</p>
+          </div>
+
+          <div style="margin-bottom: 24px;">
+            <strong style="display: block; color: #0f766e; font-size: 14px; text-transform: uppercase; margin-bottom: 4px;">Corpo Editorial</strong>
+            <p style="font-size: 16px; color: #0f172a;">redacao@vitafemme.org.br</p>
+          </div>
+
+          <div style="margin-bottom: 24px;">
+            <strong style="display: block; color: #0f766e; font-size: 14px; text-transform: uppercase; margin-bottom: 4px;">Sede Administrativa</strong>
+            <p style="font-size: 15px; color: #334155; line-height: 1.5;">Av. Brigadeiro Faria Lima, 2229 - Sala 804<br/>Jardim Paulistano, São Paulo - SP<br/>CEP: 01452-000</p>
+          </div>
+
+          <div>
+            <strong style="display: block; color: #0f766e; font-size: 14px; text-transform: uppercase; margin-bottom: 4px;">Horário de Funcionamento</strong>
+            <p style="font-size: 15px; color: #334155;">Segunda a Sexta-feira: 09:00 às 18:00 (Horário de Brasília)</p>
+          </div>
+        </div>
+
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 32px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.04);">
+          <h3 style="font-size: 20px; color: #0f172a; margin-bottom: 20px;">Envie uma Mensagem</h3>
+          
+          <form id="contactForm" onsubmit="event.preventDefault(); document.getElementById('successMsg').style.display='block'; this.reset();">
+            <div class="form-group">
+              <label class="form-label">Nome Completo</label>
+              <input type="text" class="form-control" required placeholder="Ex: Maria Silva" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">E-mail para Retorno</label>
+              <input type="email" class="form-control" required placeholder="seuemail@exemplo.com" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Assunto</label>
+              <select class="form-control" required>
+                <option value="">Selecione o motivo do contato</option>
+                <option value="duvida">Dúvida sobre publicação</option>
+                <option value="sugestao">Sugestão de pauta científica</option>
+                <option value="editorial">Comitê Editorial</option>
+                <option value="outro">Outro assunto</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Sua Mensagem</label>
+              <textarea class="form-control" rows="4" required placeholder="Como podemos ajudar você?"></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Enviar Mensagem</button>
+
+            <div id="successMsg" style="display: none; margin-top: 16px; padding: 14px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; color: #065f46; font-size: 14px; text-align: center;">
+              Mensagem enviada com sucesso! Nossa equipe retornará em até 48 horas úteis.
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <h4>VitaFemme</h4>
+          <p>Portal independente de pesquisa, informação e educação em saúde metabólica, nutrição preventiva e estilo de vida feminino.</p>
+        </div>
+        <div class="footer-col">
+          <h5>Navegação</h5>
+          <ul>
+            <li><a href="/safe/index.html">Início</a></li>
+            <li><a href="/safe/sobre.html">Quem Somos</a></li>
+            <li><a href="/safe/blog.html">Artigos & Guias</a></li>
+            <li><a href="/safe/faq.html">Dúvidas Frequentes</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h5>Institucional</h5>
+          <ul>
+            <li><a href="/safe/contato.html">Central de Atendimento</a></li>
+            <li><a href="/safe/privacidade.html">Política de Privacidade</a></li>
+            <li><a href="/safe/termos.html">Termos de Uso</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h5>Atendimento</h5>
+          <ul>
+            <li>contato@vitafemme.org.br</li>
+            <li>Seg a Sex: 09h às 18h</li>
+            <li>São Paulo - SP, Brasil</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 VitaFemme — Portal de Saúde & Nutrição. Todos os direitos reservados. Informações de caráter exclusivamente educativo.</p>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
