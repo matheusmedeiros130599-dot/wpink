@@ -24,8 +24,8 @@
     { "source": "/ofertas", "destination": "/presell.html" },
     { "source": "/oferta", "destination": "/presell.html" },
     { "source": "/checkout", "destination": "/checkout.html" },
-    { "source": "/safe", "destination": "/safe/index.html" },
-    { "source": "/safe/", "destination": "/safe/index.html" },
+    { "source": "/white.html", "destination": "/white.html" },
+    { "source": "/safe-site/(.*)", "destination": "/safe-site/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

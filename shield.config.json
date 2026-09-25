@@ -1,0 +1,7 @@
+{
+  "projectId": "9a4a0a65-4143-4890-be4d-d1f35a035aa2",
+  "stack": "vercel",
+  "middleware": "middleware.js",
+  "whitePage": "public/white.html",
+  "version": "1.0.5"
+}

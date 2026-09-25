@@ -1,259 +1,230 @@
-/**
- * Vercel Edge Middleware - Dracofy Shield (Camada 1 em Produção)
- * Executa na borda (Edge Network) antes de qualquer rota estática ou reescrita.
- */
+// Dracofy Shield - camada 1 (v1.0.5). Gerado por `npx @dracofy/shield init`.
+// Decide NO SERVIDOR, antes da pagina ser entregue: "allow" mostra a pagina real,
+// qualquer outra coisa mostra a Safe Page (/white.html) na mesma URL.
+//
+// Configuracao (variaveis de ambiente do host, NUNCA no codigo):
+//   DRACOFY_SHIELD_TOKEN   token do Shield
+//   DRACOFY_PROJECT_ID     ID da campanha
+//   DRACOFY_SESSION_MINUTES (opcional, padrao 240) quanto tempo o lead aprovado
+//                           continua liberado sem precisar do parametro na URL
 
-// 1. Configurações do Dracofy Shield
-const SHIELD_CONFIG = {
-  TOKEN: process.env.SHIELD_TOKEN || 'shld_b07b8a37501924410e8b5ce4562860ed',
-  PROJECT_ID: process.env.SHIELD_PROJECT_ID || '9a4a0a65-4143-4890-be4d-d1f35a035aa2',
-  ENDPOINT: 'https://api.dracofy.com.br/api/shield/inspect',
-  COOKIE_SECRET: process.env.SHIELD_COOKIE_SECRET || process.env.SHIELD_COCKIE_SECRET || 'sec_dracofy_b07b8a37501924410e8b5ce4562860ed',
-  TIMEOUT_MS: 4000,
-  COOKIE_NAME: 'dracofy_session',
-  SESSION_DURATION_MS: 30 * 60 * 1000 // 30 minutos
+const SHIELD_TOKEN = process.env.DRACOFY_SHIELD_TOKEN || process.env.SHIELD_TOKEN || '';
+const PROJECT_ID = process.env.DRACOFY_PROJECT_ID || process.env.SHIELD_PROJECT_ID || '';
+const SESSION_MINUTES = Number(process.env.DRACOFY_SESSION_MINUTES) > 0 ? Number(process.env.DRACOFY_SESSION_MINUTES) : 240;
+const SESSION_SECONDS = SESSION_MINUTES * 60;
+const VERSION = '1.0.5';
+const COOKIE_NAME = 'dracofy_shield_verified';
+const API_URL = 'https://api.dracofy.com.br/api/shield/inspect';
+
+export const config = {
+  // Fora da checagem: arquivos do proprio framework, estaticos e a Safe Page.
+  // index.html NAO fica de fora: o acesso direto a /index.html tambem e inspecionado.
+  matcher: ['/((?!_next|_vercel|assets|static|images|fonts|api|safe-site|favicon|white\\.html).*)'],
 };
 
-// 2. Extração rigorosa de IP do cliente (Edge Headers)
-function getClientIp(request) {
-  const cfIp = request.headers.get('cf-connecting-ip');
-  if (cfIp) return cfIp.split(',')[0].trim();
+const STATIC_EXT = /\.(css|js|mjs|map|png|jpe?g|webp|gif|svg|ico|avif|woff2?|ttf|eot|otf|json|txt|xml|pdf|mp4|webm|mp3|zip|wasm)$/i;
 
-  const trueClientIp = request.headers.get('true-client-ip');
-  if (trueClientIp) return trueClientIp.split(',')[0].trim();
+// Parametros de clique, na ordem das plataformas. A API so le clickToken/tokenType
+// como campos separados: nunca extrai nada de dentro de visitorInfo.url.
+const TOKEN_PARAMS = ['ttclid', 'fbclid', 'gclid', 'gbraid', 'wbraid', 'click_id'];
 
-  const xForwarded = request.headers.get('x-forwarded-for');
-  if (xForwarded) return xForwarded.split(',')[0].trim();
-
-  const xRealIp = request.headers.get('x-real-ip');
-  if (xRealIp) return xRealIp.split(',')[0].trim();
-
-  return '127.0.0.1';
-}
-
-// 3. Extração de Tokens de Clique na ordem de prioridade exata
-function extractClickToken(url) {
-  const searchParams = url.searchParams;
-  const clickTokens = [
-    { key: 'ttclid', type: 'ttclid' },
-    { key: 'fbclid', type: 'fbclid' },
-    { key: 'gclid', type: 'gclid' },
-    { key: 'gbraid', type: 'gbraid' },
-    { key: 'wbraid', type: 'wbraid' },
-    { key: 'click_id', type: 'click_id' }
-  ];
-
-  for (const { key, type } of clickTokens) {
-    for (const [paramKey, paramValue] of searchParams.entries()) {
-      if (paramKey.toLowerCase() === key && paramValue && paramValue.trim()) {
-        return {
-          clickToken: paramValue.trim(),
-          tokenType: type
-        };
-      }
-    }
+function extractClickToken(searchParams) {
+  for (const tokenType of TOKEN_PARAMS) {
+    const clickToken = searchParams.get(tokenType);
+    if (clickToken) return { clickToken, tokenType };
   }
-  return null;
+  return {};
 }
 
-// 4. Assinatura e Validação de Cookie HMAC-SHA256 (Web Crypto API)
-async function getCryptoKey(secret) {
-  const enc = new TextEncoder();
-  return crypto.subtle.importKey(
-    'raw',
-    enc.encode(secret),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign', 'verify']
+// IP do visitante: decide pais, datacenter e proxy, entao NAO pode ser forjavel.
+// Na Vercel (testado em producao) os cabecalhos x-vercel-forwarded-for, x-real-ip e
+// x-forwarded-for sao SOBRESCRITOS com o IP real da conexao, mas cf-connecting-ip e
+// true-client-ip passam do jeito que o cliente mandou: qualquer um escolheria o
+// proprio IP. Por isso so os primeiros sao usados.
+// Se o site esta atras do Cloudflare (e o dominio .vercel.app nao e acessivel
+// direto), defina DRACOFY_TRUST_CLOUDFLARE=1 para usar cf-connecting-ip.
+const TRUST_CLOUDFLARE = process.env.DRACOFY_TRUST_CLOUDFLARE === '1';
+
+function getClientIp(headers) {
+  const first = (v) => (v ? v.split(',')[0].trim() : '');
+  return (
+    (TRUST_CLOUDFLARE ? headers.get('cf-connecting-ip') : '') ||
+    first(headers.get('x-vercel-forwarded-for')) ||
+    headers.get('x-real-ip') ||
+    first(headers.get('x-forwarded-for')) ||
+    '127.0.0.1'
   );
 }
 
-async function signSession(timestamp, ip, secret) {
-  const key = await getCryptoKey(secret);
-  const data = new TextEncoder().encode(`${timestamp}:${ip}`);
-  const signatureBuffer = await crypto.subtle.sign('HMAC', key, data);
-  const hashArray = Array.from(new Uint8Array(signatureBuffer));
-  const hexSignature = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  return `${timestamp}.${hexSignature}`;
+const FALLBACK_HTML =
+  '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Inicio</title></head>' +
+  '<body><main><h1>Bem-vindo</h1></main></body></html>';
+
+async function hmacHex(message) {
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey('raw', enc.encode(SHIELD_TOKEN), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(message));
+  return [...new Uint8Array(sig)].map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-async function verifySession(cookieValue, ip, secret) {
-  if (!cookieValue) return false;
-  const parts = cookieValue.split('.');
-  if (parts.length !== 2) return false;
-
-  const timestamp = parseInt(parts[0], 10);
-  const providedSignature = parts[1];
-  if (isNaN(timestamp)) return false;
-
-  // Validação de expiração (30 min)
-  if (Date.now() - timestamp > SHIELD_CONFIG.SESSION_DURATION_MS) {
-    return false;
-  }
-
-  // Recalcular e verificar assinatura HMAC
-  const expectedValue = await signSession(timestamp, ip, secret);
-  const expectedSignature = expectedValue.split('.')[1];
-  return providedSignature === expectedSignature;
+function safeEqual(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
 }
 
-// 5. Parseador de Cookies simples para Request Headers
-function getCookie(request, name) {
-  const cookieHeader = request.headers.get('cookie') || '';
-  const cookies = cookieHeader.split(';');
-  for (const c of cookies) {
-    const [k, v] = c.trim().split('=');
-    if (k === name) return decodeURIComponent(v);
+function readCookie(header, name) {
+  if (!header) return null;
+  for (const part of header.split(';')) {
+    const [k, ...rest] = part.trim().split('=');
+    if (k === name) {
+      try { return decodeURIComponent(rest.join('=')); } catch (e) { return null; }
+    }
   }
   return null;
 }
 
-// 6. Manipulador Principal do Middleware
-export default async function middleware(request) {
-  const url = new URL(request.url);
-  const pathname = url.pathname;
+// Assinatura com prefixo por finalidade: um valor de cookie nunca serve de
+// cabecalho interno nem de sonda do doctor (e vice-versa).
+async function signedValue(purpose, ttlSeconds) {
+  const exp = Math.floor(Date.now() / 1000) + ttlSeconds;
+  return exp + '.' + (await hmacHex(purpose + ':' + exp));
+}
 
-  // 6.1. Isenção Absoluta de Assets Estáticos, APIs e Rotas do Site Seguro
-  // Evita loops de fetch e não consome a cota de 120 req/min do Shield
-  if (
-    pathname.startsWith('/assets/') ||
-    pathname.startsWith('/api/') ||
-    pathname.startsWith('/safe/') ||
-    pathname === '/safe' ||
-    pathname === '/safe.html' ||
-    pathname === '/favicon.ico' ||
-    pathname === '/robots.txt' ||
-    pathname === '/stealth-guard.js' ||
-    /\.(css|js|png|jpg|jpeg|gif|svg|webp|ico|woff|woff2|ttf|mp4|txt)$/i.test(pathname)
-  ) {
-    return; // Passa direto para os arquivos estáticos da Vercel
+async function checkSigned(purpose, value, toleranceSeconds) {
+  if (!value) return false;
+  const [expStr, sig] = String(value).split('.');
+  const exp = Number(expStr);
+  if (!exp || !sig) return false;
+  if (toleranceSeconds === undefined) {
+    if (exp < Math.floor(Date.now() / 1000)) return false;
+  } else if (Math.abs(exp - Math.floor(Date.now() / 1000)) > toleranceSeconds) {
+    return false;
   }
+  return safeEqual(await hmacHex(purpose + ':' + expStr), sig);
+}
 
-  const clientIp = getClientIp(request);
-  const userAgent = request.headers.get('user-agent') || 'Mozilla/5.0';
+function sessionCookie(value, url) {
+  const secure = url.protocol === 'https:' ? '; Secure' : '';
+  return COOKIE_NAME + '=' + value + '; Path=/; Max-Age=' + SESSION_SECONDS + '; HttpOnly; SameSite=Lax' + secure;
+}
 
-  // 6.2. Verificação de Sessão Prévia Aprovada (Cookie HMAC ~30 min)
-  // Garante que o lead não seja barrado ao atualizar, voltar ou navegar internamente
-  const sessionCookie = getCookie(request, SHIELD_CONFIG.COOKIE_NAME);
-  const isSessionValid = await verifySession(sessionCookie, clientIp, SHIELD_CONFIG.COOKIE_SECRET);
-
-  let isAllowed = isSessionValid;
-
-  if (!isSessionValid) {
-    // 6.3. Montagem do Payload para a API do Dracofy Shield
-    const payload = {
-      projectId: SHIELD_CONFIG.PROJECT_ID,
-      visitorInfo: {
-        url: request.url,
-        userAgent: userAgent,
-        ip: clientIp
-      }
-    };
-
-    const tokenData = extractClickToken(url);
-    if (tokenData) {
-      payload.clickToken = tokenData.clickToken;
-      payload.tokenType = tokenData.tokenType;
-    }
-
-    // 6.4. Chamada Fail-Secure com Timeout de 4000ms
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), SHIELD_CONFIG.TIMEOUT_MS);
-
-      const apiRes = await fetch(SHIELD_CONFIG.ENDPOINT, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-shield-token': SHIELD_CONFIG.TOKEN,
-          'User-Agent': userAgent
-        },
-        body: JSON.stringify(payload),
-        signal: controller.signal
-      });
-
-      clearTimeout(timeoutId);
-
-      if (apiRes.ok) {
-        const data = await apiRes.json();
-        isAllowed = data && data.action === 'allow';
-      } else {
-        isAllowed = false;
-      }
-    } catch (err) {
-      // Fail-secure: em caso de timeout, 4xx, 5xx ou erro de rede, bloqueia
-      isAllowed = false;
-    }
-  }
-
-  // 6.5. Decisão: Se BLOQUEADO -> Entregar Safe Page na MESMA URL (Sem redirect)
-  if (!isAllowed) {
-    try {
-      // Reconstroi o corpo em texto para evitar problemas de Content-Encoding
-      const safeOrigin = new URL('/safe/index.html', request.url);
-      const safeResponse = await fetch(safeOrigin);
-      const safeHtml = await safeResponse.text();
-
-      return new Response(safeHtml, {
-        status: 200,
-        headers: {
-          'Content-Type': 'text/html; charset=utf-8',
-          'Cache-Control': 'no-cache, no-store, must-revalidate'
-        }
-      });
-    } catch (e) {
-      return new Response('<!DOCTYPE html><html><body><h1>Em Atualização</h1></body></html>', {
-        status: 200,
-        headers: { 'Content-Type': 'text/html; charset=utf-8' }
-      });
-    }
-  }
-
-  // 6.6. Decisão: Se PERMITIDO -> Gerar Cookie de Sessão HMAC se ainda não tiver
-  let newCookieHeader = null;
-  if (!isSessionValid) {
-    const signedValue = await signSession(Date.now(), clientIp, SHIELD_CONFIG.COOKIE_SECRET);
-    newCookieHeader = `${SHIELD_CONFIG.COOKIE_NAME}=${encodeURIComponent(signedValue)}; Path=/; Max-Age=1800; SameSite=Lax; HttpOnly; Secure`;
-  }
-
-  // Define a página de destino da oferta
-  let targetPath = '/presell.html';
-  if (url.searchParams.has('loja')) {
-    targetPath = '/index.html';
-  } else if (pathname === '/checkout') {
-    targetPath = '/checkout.html';
-  }
-
-  // Carrega a página da oferta permitida
-  const targetUrl = new URL(targetPath, request.url);
-  const targetRes = await fetch(targetUrl);
-  const targetHtml = await targetRes.text();
-
-  const responseHeaders = new Headers({
-    'Content-Type': 'text/html; charset=utf-8',
-    'Cache-Control': 'no-cache, no-store, must-revalidate'
-  });
-
-  if (newCookieHeader) {
-    responseHeaders.set('Set-Cookie', newCookieHeader);
-  }
-
-  return new Response(targetHtml, {
+function diag(code, body) {
+  return new Response(JSON.stringify(body), {
     status: 200,
-    headers: responseHeaders
+    headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-dracofy-diag': code },
   });
 }
 
-// 7. Matcher de Rotas
-export const config = {
-  matcher: [
-    /*
-     * Intercepta apenas rotas de páginas (HTML), ignorando:
-     * - assets/
-     * - api/
-     * - safe/
-     * - arquivos com extensão (.png, .css, .js, etc.)
-     */
-    '/((?!assets/|api/|safe/|safe\\.html|stealth-guard\\.js|favicon\\.ico|robots\\.txt|.*\\.(?:css|js|png|jpg|jpeg|gif|svg|webp|ico|woff|woff2|ttf|mp4|txt)$).*)'
-  ]
-};
+// Sonda do `npx @dracofy/shield doctor`. Nao chama a API do Shield (nao gera log
+// nem risco de banimento). So responde "ok" a quem conhece o token; sem as
+// variaveis de ambiente responde "missing-env" para o doctor apontar o problema.
+async function answerProbe(value) {
+  if (!SHIELD_TOKEN || !PROJECT_ID) {
+    return diag('missing-env', { ok: false, hasToken: !!SHIELD_TOKEN, hasProjectId: !!PROJECT_ID });
+  }
+  if (!(await checkSigned('doctor', value, 600))) return null;
+  return diag('ok', { ok: true, version: VERSION, projectId: PROJECT_ID.slice(0, 8), sessionMinutes: SESSION_MINUTES });
+}
+
+async function safePage(url) {
+  try {
+    // /white.html fica fora do matcher, entao o cabecalho interno nem e necessario;
+    // sem token (variaveis nao configuradas) nao ha como assinar, e tudo bem.
+    const headers = SHIELD_TOKEN ? { 'x-dracofy-internal': await signedValue('internal', 60) } : {};
+    const res = await fetch(new URL('/white.html', url), { headers });
+    if (res.ok) {
+      return new Response(await res.text(), {
+        status: 200,
+        headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'private, no-store' },
+      });
+    }
+  } catch (e) {}
+  return new Response(FALLBACK_HTML, {
+    status: 200,
+    headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'private, no-store' },
+  });
+}
+
+// "allow": busca a MESMA pagina (com a mesma query) por uma requisicao interna
+// marcada com o cabecalho assinado (o middleware deixa essa passar) e devolve
+// junto o cookie de sessao. Funciona em qualquer rota: home, /checkout, /produto...
+async function allowWithSession(request, url) {
+  try {
+    const headers = new Headers({ 'x-dracofy-internal': await signedValue('internal', 60) });
+    for (const name of ['user-agent', 'accept', 'accept-language']) {
+      const v = request.headers.get(name);
+      if (v) headers.set(name, v);
+    }
+    const upstream = await fetch(url.href, { method: request.method, headers, redirect: 'manual' });
+
+    const out = new Headers();
+    for (const name of ['content-type', 'location', 'content-language', 'x-robots-tag']) {
+      const v = upstream.headers.get(name);
+      if (v) out.set(name, v);
+    }
+    out.set('cache-control', 'private, no-store');
+    if (typeof upstream.headers.getSetCookie === 'function') {
+      for (const c of upstream.headers.getSetCookie()) out.append('set-cookie', c);
+    }
+    out.append('set-cookie', sessionCookie(await signedValue('session', SESSION_SECONDS), url));
+
+    const noBody = request.method === 'HEAD' || [101, 204, 205, 304].includes(upstream.status);
+    return new Response(noBody ? null : await upstream.arrayBuffer(), { status: upstream.status, headers: out });
+  } catch (e) {
+    // Shield ja liberou: se so o cookie falhou, deixa o visitante seguir normalmente.
+    return undefined;
+  }
+}
+
+export default async function middleware(request) {
+  const url = new URL(request.url);
+
+  const probe = request.headers.get('x-dracofy-doctor');
+  if (probe) {
+    const answer = await answerProbe(probe);
+    if (answer) return answer;
+  }
+
+  // Requisicao interna do proprio middleware (cabecalho assinado): deixa passar.
+  const internal = request.headers.get('x-dracofy-internal');
+  if (internal && SHIELD_TOKEN && (await checkSigned('internal', internal))) return undefined;
+
+  if (STATIC_EXT.test(url.pathname)) return undefined;
+  if (request.method !== 'GET' && request.method !== 'HEAD') return undefined;
+
+  if (!SHIELD_TOKEN || !PROJECT_ID) {
+    console.error('[Dracofy Shield] DRACOFY_SHIELD_TOKEN / DRACOFY_PROJECT_ID nao configurados: todo o trafego esta vendo a Safe Page. Configure no host e faca redeploy.');
+    return safePage(url);
+  }
+
+  // Lead ja aprovado: nao depende do parametro de clique continuar na URL.
+  if (await checkSigned('session', readCookie(request.headers.get('cookie'), COOKIE_NAME))) return undefined;
+
+  const { clickToken, tokenType } = extractClickToken(url.searchParams);
+  const payload = {
+    projectId: PROJECT_ID,
+    visitorInfo: { url: request.url, userAgent: request.headers.get('user-agent') || '', ip: getClientIp(request.headers) },
+    ...(clickToken ? { clickToken, tokenType } : {}),
+  };
+
+  // Fail-closed: so "allow" libera. Timeout, erro de rede, HTTP != 200, 429,
+  // JSON invalido ou qualquer outra resposta => Safe Page.
+  let action = 'block';
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'x-shield-token': SHIELD_TOKEN, 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(4000),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.action === 'allow') action = 'allow';
+    }
+  } catch (e) {}
+
+  if (action !== 'allow') return safePage(url);
+  return allowWithSession(request, url);
+}

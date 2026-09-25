@@ -2,48 +2,64 @@
 header('Content-Type: application/json; charset=utf-8');
 require_once __DIR__ . '/config.php';
 
-// Captura a requisição JSON enviada pelo frontend
-$inputRaw = file_get_contents('php://input');
-$input = json_decode($inputRaw, true);
-
-if (!$input) {
-    echo json_encode(['success' => false, 'error' => 'Dados de checkout não recebidos pelo servidor.']);
+function fail($code, $msg) {
+    http_response_code($code);
+    echo json_encode(['success' => false, 'error' => $msg]);
     exit;
+}
+
+if (ZUCKPAY_CLIENT_ID === '' || ZUCKPAY_CLIENT_SECRET === '') {
+    fail(500, 'Gateway de pagamento não configurada.');
+}
+
+// Captura a requisição JSON enviada pelo frontend
+$input = json_decode(file_get_contents('php://input'), true);
+if (!$input) {
+    fail(400, 'Dados de checkout não recebidos pelo servidor.');
 }
 
 $customer = $input['customer'] ?? [];
-$shipping = $input['shipping'] ?? [];
-$amountCents = $input['amountCents'] ?? 0;
-$amount = $amountCents ? ($amountCents / 100) : 0;
-$cpf = $customer['documentNumber'] ?? '';
+$items = $input['items'] ?? [];
+$amountCents = (int) ($input['amountCents'] ?? 0);
+$cpf = preg_replace('/\D/', '', $customer['documentNumber'] ?? '');
 
-if ($amount <= 0) {
-    echo json_encode(['success' => false, 'error' => 'O valor do pedido deve ser maior que zero.']);
-    exit;
+if ($amountCents <= 0) {
+    fail(400, 'O valor do pedido deve ser maior que zero.');
 }
 
-// Constrói o corpo da requisição para a ZuckPay
+$descricao = implode(', ', array_map(function ($item) {
+    return $item['title'] ?? 'Produto';
+}, $items));
+
+// Zuck Pay: valor em reais (float), a idempotência vem do external_id_client
 $payload = [
-    'nome' => $customer['name'] ?? 'Cliente WPINK',
-    'cpf' => preg_replace('/\D/', '', $cpf),
-    'valor' => round($amount, 2),
-    'email' => $customer['email'] ?? 'wepinksuplementos@gmail.com',
-    'telefone' => isset($customer['phone']) ? preg_replace('/\D/', '', $customer['phone']) : '',
-    'descricao' => 'Pedido WPINK - ' . ($customer['name'] ?? 'PIX'),
-    'external_id_client' => $input['idempotencyKey'] ?? 'WP-' . time()
+    'nome' => $customer['name'] ?? 'Cliente',
+    'cpf' => $cpf,
+    'valor' => round($amountCents / 100, 2),
+    'email' => $customer['email'] ?? 'cliente@email.com',
+    'telefone' => preg_replace('/\D/', '', $customer['phone'] ?? ''),
+    'descricao' => substr($descricao !== '' ? $descricao : 'Produto', 0, 250),
+    'external_id_client' => ($input['idempotencyKey'] ?? ('PED-' . time())) . '-' . $amountCents
 ];
 
-// Chamada cURL para a API ZuckPay
-$url = ZUCKPAY_API_URL . '/conta/v3/pix/qrcode';
-$auth = base64_encode(ZUCKPAY_CLIENT_ID . ':' . ZUCKPAY_CLIENT_SECRET);
+// Repassa os parâmetros de rastreio, quando enviados pelo frontend
+$trackingKeys = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'src', 'sck',
+    'fbclid', 'fbc', 'fbp', 'gclid', 'wbraid', 'gbraid', 'ttclid', 'kclid', 'click_id'];
+$utm = is_array($input['utm'] ?? null) ? $input['utm'] : [];
+foreach ($trackingKeys as $key) {
+    if (!empty($utm[$key]) && is_scalar($utm[$key])) {
+        $payload[$key] = (string) $utm[$key];
+    }
+}
 
-$ch = curl_init($url);
+$ch = curl_init(ZUCKPAY_API_URL . '/qrcode');
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_TIMEOUT, 30);
 curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
 curl_setopt($ch, CURLOPT_HTTPHEADER, [
     'Content-Type: application/json',
-    'Authorization: Basic ' . $auth
+    'Authorization: ' . zuckpay_auth()
 ]);
 
 $responseRaw = curl_exec($ch);
@@ -52,61 +68,24 @@ $curlError = curl_error($ch);
 curl_close($ch);
 
 if ($curlError) {
-    echo json_encode(['success' => false, 'error' => 'Erro de conexão com o gateway de pagamento: ' . $curlError]);
-    exit;
+    fail(502, 'Erro de conexão com o gateway de pagamento: ' . $curlError);
 }
 
 $response = json_decode($responseRaw, true);
+$pixCode = $response['qrcode'] ?? ($response['pix_code'] ?? '');
 
-if ($httpCode >= 200 && $httpCode < 300 && isset($response['transactionId'])) {
-    $transactionId = $response['transactionId'];
-    $pixCode = $response['qrcode'] ?? $response['pix_code'] ?? '';
-    
-    $qrCodeBase64 = '';
-    
-    // Tenta baixar a imagem do QR Code retornada pela ZuckPay e converter para base64
-    if (!empty($response['qrcode_image'])) {
-        $chQr = curl_init($response['qrcode_image']);
-        curl_setopt($chQr, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($chQr, CURLOPT_TIMEOUT, 5);
-        curl_setopt($chQr, CURLOPT_FOLLOWLOCATION, true);
-        $qrImageRaw = curl_exec($chQr);
-        curl_close($chQr);
-        
-        if ($qrImageRaw) {
-            $qrCodeBase64 = base64_encode($qrImageRaw);
-        }
-    }
-    
-    // Fallback: Se não conseguiu o base64, gera via API externa do QR Server
-    if (empty($qrCodeBase64) && !empty($pixCode)) {
-        $qrApiUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($pixCode);
-        $chQr = curl_init($qrApiUrl);
-        curl_setopt($chQr, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($chQr, CURLOPT_TIMEOUT, 5);
-        $qrImageRaw = curl_exec($chQr);
-        curl_close($chQr);
-        
-        if ($qrImageRaw) {
-            $qrCodeBase64 = base64_encode($qrImageRaw);
-        }
-    }
-    
-    // Retorna exatamente a estrutura de resposta que o frontend espera
+if ($httpCode >= 200 && $httpCode < 300 && !empty($response['transactionId']) && $pixCode !== '') {
+    // Mesma estrutura de resposta que o frontend já espera
     echo json_encode([
         'success' => true,
-        'transactionId' => $transactionId,
+        'transactionId' => $response['transactionId'],
         'paymentData' => [
             'qrCode' => $pixCode,
-            'qrCodeBase64' => $qrCodeBase64
+            'qrCodeBase64' => ''
         ],
-        'status' => 'pending'
+        'status' => $response['status'] ?? 'PENDING'
     ]);
 } else {
-    $errMsg = $response['message'] ?? $response['error'] ?? 'Erro desconhecido ao gerar o Pix.';
-    echo json_encode([
-        'success' => false,
-        'error' => $errMsg
-    ]);
+    fail($httpCode >= 400 ? $httpCode : 502, $response['message'] ?? $response['error'] ?? 'Erro desconhecido ao gerar o Pix.');
 }
 ?>

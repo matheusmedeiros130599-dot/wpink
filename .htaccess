@@ -7,6 +7,9 @@
   RewriteRule ^api/check-status$ check-status.php [L,QSA]
   RewriteRule ^api/pix-proof-upload.php$ pix-proof-upload.php [L,QSA]
 
+  # 1.5. Rewrite /checkout to checkout.html
+  RewriteRule ^checkout$ checkout.html [L,QSA]
+
   # 2. Redirect all other non-file/non-directory requests to index.html for React SPA
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
