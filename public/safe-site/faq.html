@@ -3,40 +3,43 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Perguntas Frequentes (FAQ)</title>
-  <meta name="description" content="Perguntas Frequentes (FAQ) - Informações essenciais e guias práticos.">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📖</text></svg>">
+  <title>Perguntas Frequentes (FAQ) — Portal Nutrição & Bem-Estar</title>
+  <meta name="description" content="Perguntas frequentes sobre suplementação, nutrição diária, colágeno, creatina e hábitos saudáveis.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
   <style>
-    :root { --primary: #2563eb; --secondary: #1e40af; --bg: #f8fafc; --text: #0f172a; --gray: #64748b; }
+    :root {
+      --primary: #e8117f;
+      --secondary: #0f172a;
+      --primary-hover: #c90a6c;
+      --bg: #f8fafc;
+      --text: #1e293b;
+      --gray: #64748b;
+      --border: #e2e8f0;
+      --card-bg: #ffffff;
+    }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
-    header { background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 1rem 0; }
-    .container { max-width: 1200px; margin: 0 auto; padding: 0 1rem; }
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+    header { background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.06); padding: 1.1rem 0; border-bottom: 1px solid var(--border); }
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 1.25rem; }
     .nav { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
-    .logo { font-size: 1.5rem; font-weight: bold; color: var(--primary); text-decoration: none; }
-    .menu { display: flex; gap: 1rem; flex-wrap: wrap; }
-    .menu a { color: var(--text); text-decoration: none; font-weight: 500; }
+    .logo { font-size: 1.4rem; font-weight: 700; color: var(--primary); text-decoration: none; letter-spacing: -0.02em; display: flex; align-items: center; gap: 0.4rem; }
+    .menu { display: flex; gap: 1.25rem; flex-wrap: wrap; }
+    .menu a { color: var(--text); text-decoration: none; font-weight: 500; font-size: 0.95rem; transition: color 0.2s; }
     .menu a:hover { color: var(--primary); }
     main { padding: 3rem 0; min-height: 70vh; }
-    footer { background: #1e293b; color: #fff; padding: 3rem 0; text-align: center; }
+    footer { background: var(--secondary); color: #fff; padding: 3rem 0; text-align: center; }
     .footer-links { display: flex; justify-content: center; gap: 1.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
-    .footer-links a { color: #cbd5e1; text-decoration: none; }
-    h1, h2, h3 { color: var(--primary); margin-bottom: 1rem; }
-    p { margin-bottom: 1rem; }
-    .card { background: #fff; padding: 1.5rem; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 1.5rem; }
-    .hero { text-align: center; padding: 4rem 0; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; margin-bottom: 3rem; }
-    .hero h1 { color: #fff; font-size: 2.5rem; margin-bottom: 1rem; }
-    .hero p { font-size: 1.25rem; opacity: 0.9; }
-    .btn { display: inline-block; padding: 0.75rem 1.5rem; background: var(--primary); color: #fff; text-decoration: none; border-radius: 4px; font-weight: bold; }
-    form { display: flex; flex-direction: column; gap: 1rem; max-width: 500px; }
-    input, textarea { padding: 0.75rem; border: 1px solid #ccc; border-radius: 4px; font-family: inherit; }
-    button { padding: 0.75rem; background: var(--primary); color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+    .footer-links a { color: #cbd5e1; text-decoration: none; font-size: 0.9rem; }
+    .footer-links a:hover { color: #fff; }
+    h1, h2, h3 { color: var(--secondary); margin-bottom: 0.75rem; }
+    p { margin-bottom: 1.25rem; color: #334155; }
+    .card { background: var(--card-bg); padding: 2rem; border-radius: 10px; border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.04); margin-bottom: 1.5rem; }
   </style>
 </head>
 <body>
   <header>
     <div class="container nav">
-      <a href="index.html" class="logo">Suplementos alimentares e saude</a>
+      <a href="index.html" class="logo">🌿 Nutrição & Bem-Estar</a>
       <div class="menu">
         <a href="index.html">Início</a>
         <a href="sobre.html">Sobre</a>
@@ -47,36 +50,34 @@
     </div>
   </header>
   <main>
-    
     <div class="container">
       <h1>Perguntas Frequentes (FAQ)</h1>
       <div class="card">
-        <h3>1. O conteúdo do site é gratuito?</h3>
-        <p>Sim, todos os nossos artigos e guias são 100% gratuitos e acessíveis a qualquer pessoa.</p>
+        <h3>1. O que são suplementos alimentares segundo a legislação brasileira?</h3>
+        <p>De acordo com a Anvisa (RDC nº 243/2018), suplementos alimentares são produtos destinados à ingestão oral, apresentados em formas farmacêuticas (cápsulas, pós, líquidos), que fornecem nutrientes, substâncias bioativas, enzimas ou probióticos em complemento à alimentação convencional para indivíduos saudáveis.</p>
         
-        <h3>2. Com que frequência vocês publicam novos artigos?</h3>
-        <p>Atualizamos nosso blog regularmente com novos conteúdos. Nossa meta é trazer novidades pelo menos uma vez por semana.</p>
+        <h3>2. O colágeno hidrolisado realmente é absorvido pelo organismo?</h3>
+        <p>Sim. O processo de hidrólise quebra a proteína de colágeno em peptídeos menores de baixo peso molecular. Esses peptídeos atravessam a barreira intestinal com maior facilidade e estimulam os fibroblastos a sintetizarem novas matrizes de colágeno e ácido hialurônico, com eficácia potencializada na presença de vitamina C.</p>
         
-        <h3>3. Como posso sugerir um tema para o blog?</h3>
-        <p>Adoramos ouvir nossos leitores! Você pode sugerir temas usando o formulário na página de Contato.</p>
+        <h3>3. A creatina retém líquido e causa inchaço indesejado?</h3>
+        <p>Não. A retenção hídrica promovida pela creatina monohidratada é estritamente intracelular (dentro das células musculares), o que favorece a síntese de proteínas e o volume celular sem provocar retenção extracelular ou aspecto de inchaço subcutâneo.</p>
         
-        <h3>4. As dicas servem para qualquer região do Brasil?</h3>
-        <p>Sim, buscamos produzir conteúdos com abordagens gerais que se aplicam em âmbito nacional.</p>
+        <h3>4. Mulheres podem tomar creatina sem risco de masculinização?</h3>
+        <p>Com certeza. A creatina é um composto orgânico derivado de aminoácidos (arginina, glicina e metionina), não possui nenhuma atividade hormonal e traz benefícios expressivos tanto para a força física quanto para a função cognitiva e proteção óssea em mulheres.</p>
         
-        <h3>5. Vocês oferecem algum tipo de consultoria personalizada?</h3>
-        <p>No momento, focamos apenas na produção de conteúdo informativo geral através do site, não prestamos serviços de consultoria individual.</p>
+        <h3>5. Qual o melhor horário para consumir vitaminas e minerais?</h3>
+        <p>Vitaminas lipossolúveis (A, D, E e K) têm melhor absorção quando ingeridas junto a refeições que contenham fontes saudáveis de gordura. Já minerais como ferro e cálcio competem pelos mesmos transportadores intestinais, sendo prudente administrá-los em horários distintos.</p>
         
-        <h3>6. Posso compartilhar os artigos em minhas redes sociais?</h3>
-        <p>Com certeza! Incentivamos o compartilhamento de informações úteis. Apenas pedimos que você inclua o link para a postagem original.</p>
+        <h3>6. Posso substituir uma refeição por suplementos?</h3>
+        <p>Não recomendamos. Suplementos devem complementar — e nunca substituir — refeições compostas por alimentos integrais, ricos em fibras, fitoquímicos e variedade nutricional que suplementos isolados não reproduzem integralmente.</p>
         
-        <h3>7. Como entro em contato com a equipe de redação?</h3>
-        <p>Através da nossa página de Contato. Respondemos a todas as mensagens em até 48 horas úteis.</p>
+        <h3>7. Os artigos do portal são revisados por especialistas?</h3>
+        <p>Sim. Nossos conteúdos são elaborados a partir de consensos científicos, estudos clínicos indexados na PubMed e diretrizes nutricionais consolidadas.</p>
         
-        <h3>8. Como vocês garantem a qualidade das informações?</h3>
-        <p>Nossa equipe realiza pesquisas extensas em fontes confiáveis e revisa cuidadosamente cada artigo antes da publicação para garantir precisão e relevância.</p>
+        <h3>8. Este portal comercializa produtos ou oferece consultas médicas?</h3>
+        <p>Não. Nosso trabalho é 100% informativo e educativo. Para diagnósticos, planos alimentares e prescrições terapêuticas, consulte sempre um nutricionista ou médico.</p>
       </div>
     </div>
-  
   </main>
   <footer>
     <div class="container">
@@ -84,8 +85,8 @@
         <a href="politica-de-privacidade.html">Política de Privacidade</a>
         <a href="termos-de-uso.html">Termos de Uso</a>
       </div>
-      <p>&copy; 2025 Suplementos alimentares e saude. Todos os direitos reservados.</p>
-      <p style="font-size: 0.875rem; margin-top: 0.5rem; color: #94a3b8;">contato@guiadedicaseartigos.com.br</p>
+      <p>&copy; 2026 Portal Nutrição & Bem-Estar. Todos os direitos reservados.</p>
+      <p style="font-size: 0.875rem; margin-top: 0.5rem; color: #94a3b8;">contato@portalnutricaoebemestar.org</p>
     </div>
   </footer>
 </body>
